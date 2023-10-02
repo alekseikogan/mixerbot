@@ -1,5 +1,6 @@
 import os
 import requests
+import logging
 
 from telegram.ext import Updater, Filters, MessageHandler, CommandHandler
 from telegram import ReplyKeyboardMarkup
@@ -9,7 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 secret_token = os.getenv('TOKEN')
 
-updater = Updater(token=secret_token)
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO)
+
 URL = {
     'ip': 'https://api.ipify.org?format=json',
     'cat': 'https://api.thecatapi.com/v1/images/search'}
@@ -25,7 +29,7 @@ def get_ip():
     try:
         response = requests.get(URL['ip']).json()
     except Exception as error:
-        print(error)
+        logging.error(f'Ошибка при запросе к основному API: {error}')
         new_url = 'https://api.thedogapi.com/v1/images/search'
         response = requests.get(new_url)
         random_dog = response[0].get('url')
@@ -46,7 +50,7 @@ def get_new_image():
     try:
         response = requests.get(URL['cat']).json()
     except Exception as error:
-        print(error)
+        logging.error(f'Ошибка при запросе к основному API: {error}')
         new_url = 'https://api.thedogapi.com/v1/images/search'
         response = requests.get(new_url)
 
@@ -70,7 +74,12 @@ def wake_up(update, context):
         resize_keyboard=True)
     context.bot.send_message(
         chat_id=chat.id,
-        text='Я ПРОСНУЛСЯ!!!11',
+        text='Система запущена. Налаживаю соединение с сервером...',
+        reply_markup=button)
+
+    context.bot.send_message(
+        chat_id=chat.id,
+        text='Я к Вашим услугам.',
         reply_markup=button)
 
     context.bot.send_message(
@@ -87,6 +96,7 @@ def wake_up(update, context):
 
 
 def main():
+    updater = Updater(token=secret_token)
     updater.dispatcher.add_handler(CommandHandler('start', wake_up))
     updater.dispatcher.add_handler(CommandHandler('newcat', new_cat))
     updater.dispatcher.add_handler(CommandHandler('get_ip', new_ip))
