@@ -22,9 +22,17 @@ def say_hi(update, context):
 
 def get_ip():
     """Выдает твой ip"""
-    response = requests.get(URL['ip']).json()
+    try:
+        response = requests.get(URL['ip']).json()
+    except Exception as error:
+        print(error)
+        new_url = 'https://api.thedogapi.com/v1/images/search'
+        response = requests.get(new_url)
+        random_dog = response[0].get('url')
+        return random_dog
+
     your_ip = response.get('ip')
-    return f' Твой ip:\n{your_ip}'
+    return your_ip
 
 
 def new_ip(update, context):
@@ -35,7 +43,13 @@ def new_ip(update, context):
 
 def get_new_image():
     """Формирует изображение котика"""
-    response = requests.get(URL['cat']).json()
+    try:
+        response = requests.get(URL['cat']).json()
+    except Exception as error:
+        print(error)
+        new_url = 'https://api.thedogapi.com/v1/images/search'
+        response = requests.get(new_url)
+
     random_cat = response[0].get('url')
     return random_cat
 
@@ -72,10 +86,15 @@ def wake_up(update, context):
     context.bot.send_photo(chat.id, get_new_image())
 
 
-updater.dispatcher.add_handler(CommandHandler('start', wake_up))
-updater.dispatcher.add_handler(CommandHandler('newcat', new_cat))
-updater.dispatcher.add_handler(CommandHandler('get_ip', new_ip))
-updater.dispatcher.add_handler(MessageHandler(Filters.text, say_hi))
+def main():
+    updater.dispatcher.add_handler(CommandHandler('start', wake_up))
+    updater.dispatcher.add_handler(CommandHandler('newcat', new_cat))
+    updater.dispatcher.add_handler(CommandHandler('get_ip', new_ip))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, say_hi))
 
-updater.start_polling()
-updater.idle()
+    updater.start_polling()
+    updater.idle()
+
+
+if __name__ == '__main__':
+    main()
